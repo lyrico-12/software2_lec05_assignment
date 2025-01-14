@@ -1,22 +1,22 @@
 #include <stdio.h>
 
 int main(void) {
-    float f[4];
+    int f[4];
 
     // 以下に適切な値を設定する
-    f[0] = 0.0;
-    f[1] = 1.0;
-    f[2] = 2.0;
-    f[3] = 3.0;
+    f[0] = 0;
+    f[1] = 1;
+    f[2] = 2;
+    f[3] = 52;
 
     // "Hello,World\n" と出力してほしい
-    printf("%s", (char*)f);
+    printf("%d\n", f[0]);
 
     // f[0] をいじる
     f[0] += 0.0;
 
     // "hello,World\n" と出力してほしい
-    printf("%s", (char*)f);
+    printf("%c\n", f[3]);
 
     return 0;
 }
