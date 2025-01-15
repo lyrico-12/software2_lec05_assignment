@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h> // contains_char内のisdigit関数を使うために必要
 
 #include "item.h"
 
@@ -23,12 +24,12 @@ struct itemset {
 // バイナリファイルからItemsetを設定 [未実装, 課題1] 
 // バイナリは最初に品物数を表すsize_t、 そのあと価値が品物数分double で、その後重さが品物数分double で表されているとする。
 Itemset *load_itemset(char *filename) {
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "rb");
 
     // 品物数読み取り
     size_t number;
     if (fread(&number, sizeof(size_t), 1, fp) != 1) {
-        printf(stderr, "Failed to read item-number from binary file.\n");
+        printf("Failed to read item-number from binary file.\n");
         fclose(fp);
         return NULL;
     }
@@ -36,12 +37,12 @@ Itemset *load_itemset(char *filename) {
     // 価値の読み取り
     double* values = (double *)malloc(sizeof(double) * number);
     if (values == NULL) {
-        printf(stderr, "Memory allocation failed\n");
+        printf("Memory allocation failed\n");
         fclose(fp);
         return NULL;
     }
     if (fread(values, sizeof(double), number, fp) != number) {
-        printf(stderr, "Failed to read item-values from binary file.\n");
+        printf("Failed to read item-values from binary file.\n");
         fclose(fp);
         return NULL;
     }
@@ -49,12 +50,12 @@ Itemset *load_itemset(char *filename) {
     // 品物数の読み取り
     double* weights = (double *)malloc(sizeof(double) * number);
     if (weights == NULL) {
-        printf(stderr, "Memory allocation failed\n");
+        printf("Memory allocation failed\n");
         fclose(fp);
         return NULL;
     }
     if (fread(weights, sizeof(double), number, fp) != number) {
-        printf(stderr, "Failed to read item-values from binary file.\n");
+        printf("Failed to read item-values from binary file.\n");
         fclose(fp);
         return NULL;
     }
@@ -67,32 +68,48 @@ Itemset *load_itemset(char *filename) {
         item[i].weight = weights[i];
     }
 
-    Itemset* itemset;
+    Itemset* itemset = (Itemset*)malloc(sizeof(Itemset));
+    if (itemset == NULL) {
+        printf("Memory allocation failed for itemset\n");
+        return NULL;
+    }
+
     itemset->number = number;
     itemset->item = item;
 
+    free(values);
+    free(weights);
     fclose(fp);
     return itemset;
 }
 
+// 文字列中に文字が含まれているか確認する。
+// 文字があったら1を返す(else 0)
+int contains_char(const char* str) {
+    while (*str) {
+        if (!isdigit((unsigned char)* str)) {
+            return 1;
+        }
+        str++;
+    }
+    return 0;
+}
+
 // ↓標準入力の話
 // 第一引数にファイル名を受け取るようにする。第二引数に重さの上限を入力する。第一引数が数字だった場合はその数字に基づいて従来のプログラムが動くようにする。
-Itemset *init_itemset(size_t number, int seed, char* filename) {
-    if (filename == NULL) {
-        Itemset *items = (Itemset *)malloc(sizeof(Itemset));
-        Item *item = (Item *)malloc(sizeof(Item) * number);
+// 構造体をポインタで確保するお作法を確認してみよう
+Itemset *init_itemset(size_t number, int seed) {
+    Itemset *list = (Itemset *)malloc(sizeof(Itemset));
 
-        srand(seed);
-        for (int i = 0; i < number; i++) {// ここをファイル入力にする
-            item[i].value = 0.25 * (rand() % 200);
-            item[i].weight = 0.25 * (rand() % 200 + 1);
-        }
-        *items = (Itemset){.number = number, .item = item};
-        return items;
-    } else {
-        Itemset *items = load_itemset(filename);
-        return items;
+    Item *item = (Item *)malloc(sizeof(Item) * number);
+
+    srand(seed);
+    for (int i = 0; i < number; i++) {
+        item[i].value = 0.25 * (rand() % 200);
+        item[i].weight = 0.25 * (rand() % 200 + 1);
     }
+    *list = (Itemset){.number = number, .item = item};
+    return list;
 }
 
 // itemset の free関数

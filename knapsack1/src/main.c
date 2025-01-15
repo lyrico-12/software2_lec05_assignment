@@ -20,32 +20,68 @@ int main(int argc, char **argv) {
     // 個数の上限はあらかじめ定めておく
     const int max_items = 100;
 
-    const int n = load_int(argv[1]);
-    assert(n <= max_items);  // assert で止める
-    assert(n > 0);           // 0以下も抑止する
+    if (contains_char(argv[1]) == 0) {// 第一引数が数字だったら
+        const int n = load_int(argv[1]);
+        assert(n <= max_items);  // assert で止める
+        assert(n > 0);           // 0以下も抑止する
 
-    const double W = load_double(argv[2]);
-    assert(W >= 0.0);
+        const double W = load_double(argv[2]);
+        assert(W >= 0.0);
 
-    printf("max capacity: W = %.f, # of items: %d\n", W, n);
+        printf("max capacity: W = %.f, # of items: %d\n", W, n);
 
-    // 乱数シードを1にして、初期化 (ここは変更可能)
-    int seed = 1;
-    Itemset *items = init_itemset(n, seed);
-    print_itemset(items);
+        // 乱数シードを1にして、初期化 (ここは変更可能)
+        int seed = 1;
+        Itemset *items = init_itemset(n, seed);
+        print_itemset(items);
+        // ソルバーで解く
+        Answer ans = solve(items, W);
 
-    // ソルバーで解く
-    Answer ans = solve(items, W);
+        // 表示する
+        printf("----\nbest solution:\n");
+        printf("value: %4.1f\n", ans.value);
+        for (int i = 0; i < get_nitem(items); i++) {
+            printf("%d", ans.flags[i]);
+        }
+        printf("\n");
 
-    // 表示する
-    printf("----\nbest solution:\n");
-    printf("value: %4.1f\n", ans.value);
-    for (int i = 0; i < get_nitem(items); i++) {
-        printf("%d", ans.flags[i]);
+
+        free_itemset(items);
+
+    } else {// 第一引数がファイル名だったら
+        Itemset* items = load_itemset(argv[1]);
+        if (items == NULL) {
+            printf("Failed!\n");
+            return EXIT_FAILURE;
+        }
+        
+        const int n = (int)get_nitem(items);
+        assert(n <= max_items);
+        assert(n > 0);
+
+        const double W = load_double(argv[2]);
+        assert(W >= 0.0);
+
+        printf("max capacity: W = %.f, # of items: %d\n", W, n);
+
+        // itemsetをプリント
+        print_itemset(items);
+
+        // ソルバーで解く
+        Answer ans = solve(items, W);
+
+        // 表示する
+        printf("----\nbest solution:\n");
+        printf("value: %4.1f\n", ans.value);
+        for (int i = 0; i < get_nitem(items); i++) {
+            printf("%d", ans.flags[i]);
+        }
+        printf("\n");
+
+        free_itemset(items);
     }
-    printf("\n");
 
-
-    free_itemset(items);
+    
     return 0;
+    
 }

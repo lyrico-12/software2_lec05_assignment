@@ -4,6 +4,8 @@
 typedef struct item Item;
 typedef struct itemset Itemset;
 
+// 文字列中に数字が含まれているか確認する。
+int contains_char(const char* str);
 
 // Itemsetを初期化し、そのポインタを返す関数
 // 乱数シードを第2引数にとる
