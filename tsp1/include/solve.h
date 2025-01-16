@@ -1,6 +1,12 @@
 #pragma once
 #include "city.h"
 
-void permutation(int *route, int *visited, int n);
+typedef struct ans{
+    double dist;
+    int *route;
+} Answer;
+
+
 double solve(const City *city, int n, int *route, int *visited);
 
+Answer search(const City *city, int n, int *route, int *visited);
