@@ -16,6 +16,8 @@ double distance(const City *a, const City *b) {
     return sqrt(dx * dx + dy * dy);
 }
 
+// 先頭にとし数nが格納されている
+// 続いて各都市の座標(x, y)が格納
 City *load_cities(const char *filename, int *n) {
     City *city;
     FILE *fp;

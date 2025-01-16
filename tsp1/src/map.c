@@ -16,9 +16,9 @@ struct map {
 static int max(const int a, const int b) { return (a > b) ? a : b; }
 
 Map *init_map(const int width, const int height) {
-    Map *ret = (Map *)malloc(sizeof(Map));
-    char **dot = (char **)malloc(width * sizeof(char *));
-    char *tmp = (char *)malloc(width * height * sizeof(char));
+    Map *ret = (Map *)malloc(sizeof(Map));// 構造体マップへのメモリ割り当て
+    char **dot = (char **)malloc(width * sizeof(char *));// 二次元配列を確保する
+    char *tmp = (char *)malloc(width * height * sizeof(char));// height * width分のメモリが確保される
 
     for (int i = 0; i < width; i++) {
         dot[i] = tmp + i * height;
