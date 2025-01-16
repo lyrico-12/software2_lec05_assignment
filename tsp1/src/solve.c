@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "city.h"
 #include "map.h"
@@ -10,70 +11,58 @@ double solve(const City *city, int n, int *route, int *visited) {
     route[0] = 0;  // 循環した結果を避けるため、常に0番目からスタート
     visited[0] = 1;
 
-    Answer ans = search(city, n, route, visited);
+    Answer ans = two_opt_search(city, n, route, visited);
 
     memcpy(route, ans.route, sizeof(int) * n);
     free(ans.route);
     return ans.dist;
 }
 
-Answer search(const City *city, int n, int *route, int *visited) {
-    static double mindis = 10000000000;
-    int start = 0;
-    double cum_dis = 0;
-    // 訪問した個数および訪問したところまでの累積距離を計算
-    int c0 = route[0];
-    for (int i = 1; i < n; i++) {
-        if (!route[i]) {
-            start = i;
-            break;
-        } else {
-            int c1 = route[i];
-            cum_dis += distance(get_city(city, c0), get_city(city, c1));
-            c0 = c1;
+Answer two_opt_search(const City *city, int n, int *route, int *visited) {
+    // routeを初期化
+    for (int i = 0; i < n; i++) {
+        route[i] = i;
+    }
+
+    // two-opt
+    int improved = 1;
+    while (improved) {
+        improved = 0;
+        for (int i = 1; i < n - 2; i++) {
+            for (int j = i + 1; j < n - 1; j++) {
+                double old_dist = distance(get_city(city, route[i - 1]), get_city(city, route[i])) + 
+                                    distance(get_city(city, route[j]), get_city(city, route[j + 1] % n));
+                double new_dist = distance(get_city(city, route[i - 1]), get_city(city, route[j])) + 
+                                    distance(get_city(city, route[i]), get_city(city, route[j + 1] % n));
+                
+                // swapする
+                if (new_dist < old_dist) {
+                    int temp;
+                    while (i < j) {
+                        temp = route[i];
+                        route[i] = route[j];
+                        route[j] = temp;
+                        i++;
+                        j--;
+                    }
+                    improved = 1;
+                }
+             }
         }
     }
 
-    // 全て訪問したケース（ここが再帰の終端条件）
-    if (start == 0) {
-        // 個数カウント時に距離計算しているので簡略化可能
-        double sum_d =
-            cum_dis + distance(get_city(city, c0), get_city(city, 0));
-        int *retarg = (int *)malloc(sizeof(int) * n);
-        memcpy(retarg, route, sizeof(int) * n);
-        if (sum_d < mindis) mindis = sum_d;
-        return (Answer){.dist = sum_d, .route = retarg};
+    // 最適化後の総距離を計算
+    double total_dist = 0.0;
+    for (int i = 0; i < n - 1; i++) {
+        total_dist += distance(get_city(city, route[i]), get_city(city, route[i + 1]));
     }
+    total_dist += distance(get_city(city, route[n - 1]), get_city(city, route[0]));
 
-    // 特定の分岐における最小の巡回経路を調べる
-    Answer min = {.dist = 10000000000, .route = NULL};
-    for (int i = 1; i < n; i++) {
-        // 未訪問なら訪れる
-        if (!visited[i]) {
-            if (i == 2 && !visited[1]) continue;  // 逆順の巡回経路を抑制
-            // ここまでの累積距離が現状の最小距離を超えていたら枝刈り
-            if (cum_dis + distance(get_city(city, route[start - 1]),
-                                   get_city(city, i)) >
-                mindis)
-                continue;
+    // 結果をAnswer構造体に格納
+    Answer ans;
+    ans.dist = total_dist;
+    ans.route = (int *)malloc(sizeof(int) * n);
+    memcpy(ans.route, route, sizeof(int) * n);
 
-            route[start] = i;
-            visited[i] = 1;
-
-            Answer tmp = search(city, n, route, visited);
-
-            // 最小の巡回経路かどうか確認
-            if (tmp.dist < min.dist) {
-                free(min.route);
-                min = tmp;
-            } else {
-                free(tmp.route);
-            }
-
-            route[start] = 0;
-            visited[i] = 0;
-        }
-    }
-
-    return min;
+    return ans;
 }

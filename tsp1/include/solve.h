@@ -9,4 +9,4 @@ typedef struct ans{
 
 double solve(const City *city, int n, int *route, int *visited);
 
-Answer search(const City *city, int n, int *route, int *visited);
+Answer two_opt_search(const City *city, int n, int *route, int *visited);
